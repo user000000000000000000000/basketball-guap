@@ -4,6 +4,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { GYM, WEEKLY } from '../../lib/config'
 import type { EventRow } from '../../lib/types'
+import { useGeolocation } from '../../hooks/useGeolocation'
 import { Card, fmtDate, fmtTime, Msg } from '../../components/ui'
 
 const empty = () => ({ title: 'Баскетбол', date: format(new Date(), 'yyyy-MM-dd'), start_time: '20:00', end_time: '21:00', lat: String(GYM.lat), lng: String(GYM.lng) })
@@ -13,6 +14,8 @@ export default function Events() {
   const [f, setF] = useState(empty())
   const [editId, setEditId] = useState<string | null>(null)
   const [err, setErr] = useState('')
+  const { locate, loading: locating } = useGeolocation()
+  const [info, setInfo] = useState('')
   const [past, setPast] = useState(false)
   const [open, setOpen] = useState(false)
 
@@ -45,6 +48,19 @@ export default function Events() {
     load()
   }
 
+  // «Я в зале»: текущая позиция телефона становится координатами всех будущих тренировок
+  const calibrate = async () => {
+    setErr(''); setInfo('')
+    try {
+      const p = await locate()
+      const { error } = await supabase.from('events').update({ lat: p.latitude, lng: p.longitude }).gte('date', format(new Date(), 'yyyy-MM-dd'))
+      if (error) throw new Error(error.message)
+      setF((x) => ({ ...x, lat: String(p.latitude), lng: String(p.longitude) }))
+      setInfo(`Готово: ${p.latitude.toFixed(5)}, ${p.longitude.toFixed(5)} (точность ±${Math.round(p.accuracy)} м). Впишите их в VITE_GYM_LAT/LNG, чтобы новые тренировки создавались с ними.`)
+      load()
+    } catch (e) { setErr((e as Error).message) }
+  }
+
   const edit = (e: EventRow) => {
     setEditId(e.id)
     setOpen(true)
@@ -67,6 +83,8 @@ export default function Events() {
           Создать тренировки на 4 недели
           <span className="block text-xs font-normal opacity-90">пн и ср · 20:00–21:00 и 21:00–22:00</span>
         </button>
+        <button className="btn-ghost w-full" disabled={locating} onClick={calibrate}>{locating ? 'Определяем…' : '📍 Я в зале: взять мои координаты'}</button>
+        {info && <Msg kind="ok">{info}</Msg>}
         {err && <Msg kind="err">{err}</Msg>}
         <button className="btn-ghost w-full" onClick={() => setOpen(!open)}>{open ? 'Скрыть форму' : editId ? 'Редактирование' : 'Добавить одну тренировку'}</button>
         {open && (
