@@ -24,6 +24,7 @@ export default function Layout() {
         <button onClick={signOut} aria-label="Выйти" className="btn-ghost !px-3"><LogOut size={20} /></button>
       </header>
       <Outlet />
+      <p className="mt-6 text-center text-xs text-slate-400">версия {__BUILD__}</p>
       <nav className="glass fixed inset-x-4 bottom-4 z-10 mx-auto flex max-w-md justify-around p-2" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
         {tabs.map(({ to, icon: Icon, label }) => (
           <NavLink

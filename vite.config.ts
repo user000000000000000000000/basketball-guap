@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // base './' + HashRouter => works on GitHub Pages (any repo name), Vercel and file hosting
 export default defineConfig({ base: './', plugins: [react(), tailwindcss()],
+  define: { __BUILD__: JSON.stringify(new Date().toISOString().slice(5, 16).replace('T', ' ')) }, // версия сборки внизу страницы: сразу видно, свежий ли кэш
   // host: true — слушать и IPv4, и IPv6 (иначе localhost в Edge/Chrome может не открыться)
   server: { host: true, port: 5180, strictPort: true },
 })
