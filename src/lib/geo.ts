@@ -16,12 +16,15 @@ export async function geocode(query: string): Promise<Place | null> {
   const pair = q.match(/(-?\d{1,3}[.,]\d{3,})\s*[,; ]\s*(-?\d{1,3}[.,]\d{3,})/)
   if (pair) return { lat: parseFloat(pair[1].replace(',', '.')), lng: parseFloat(pair[2].replace(',', '.')), name: 'Координаты из ввода', exact: true }
   if (YANDEX_KEY) {
-    const r = await fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_KEY}&format=json&results=1&lang=ru_RU&geocode=${encodeURIComponent(q)}`)
-    if (!r.ok) throw new Error('Геокодер не ответил — проверьте ключ')
-    const g = (await r.json()).response.GeoObjectCollection.featureMember[0]?.GeoObject
-    if (!g) return null
-    const [lng, lat] = g.Point.pos.split(' ').map(Number)
-    return { lat, lng, name: g.metaDataProperty.GeocoderMetaData.text, exact: g.metaDataProperty.GeocoderMetaData.precision === 'exact' }
+    try {
+      const r = await fetch(`https://geocode-maps.yandex.ru/v1/?apikey=${YANDEX_KEY}&format=json&results=1&lang=ru_RU&geocode=${encodeURIComponent(q)}`)
+      if (r.ok) {
+        const g = (await r.json()).response.GeoObjectCollection.featureMember[0]?.GeoObject
+        if (!g) return null
+        const [lng, lat] = g.Point.pos.split(' ').map(Number)
+        return { lat, lng, name: g.metaDataProperty.GeocoderMetaData.text, exact: g.metaDataProperty.GeocoderMetaData.precision === 'exact' }
+      }
+    } catch { /* ключ не принят или нет сети — ниже запасной поиск через OpenStreetMap */ }
   }
   const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=ru&countrycodes=ru&q=${encodeURIComponent(q)}`)
   const j = (await r.json())[0]
