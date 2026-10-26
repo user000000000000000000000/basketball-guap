@@ -83,3 +83,13 @@ body {
   outline: none;
   &:focus { border-color: #7a2fa8; box-shadow: 0 0 0 3px rgba(124, 58, 237, .2); }
 }
+
+/* appearance:none убирает у select стрелку и у iOS-инпутов даты/времени «родную» ширину — возвращаем стрелку руками */
+select.field {
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2314306f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+}
+input.field::-webkit-date-and-time-value { text-align: left; min-height: 1.5em; }
+input.field::-webkit-datetime-edit { padding: 0; }
