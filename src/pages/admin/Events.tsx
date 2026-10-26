@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { GYM, WEEKLY } from '../../lib/config'
 import type { EventRow } from '../../lib/types'
 import { useGeolocation } from '../../hooks/useGeolocation'
-import { Card, fmtDate, fmtTime, Msg } from '../../components/ui'
+import { Card, fmtDate, fmtTime, Msg, PickerField } from '../../components/ui'
 
 const empty = () => ({ title: 'Баскетбол', date: format(new Date(), 'yyyy-MM-dd'), start_time: '20:00', end_time: '21:00', lat: String(GYM.lat), lng: String(GYM.lng) })
 
@@ -90,9 +90,9 @@ export default function Events() {
         {open && (
           <form onSubmit={submit} className="grid grid-cols-2 gap-3">
             <input className="field col-span-2" required placeholder="Название" value={f.title} onChange={set('title')} />
-            <label className="col-span-2 min-w-0 text-xs text-slate-500">Дата<input className="field mt-1" required type="date" value={f.date} onChange={set('date')} /></label>
-            <label className="min-w-0 text-xs text-slate-500">Начало<input className="field mt-1" required type="time" value={f.start_time} onChange={set('start_time')} /></label>
-            <label className="min-w-0 text-xs text-slate-500">Конец<input className="field mt-1" required type="time" value={f.end_time} onChange={set('end_time')} /></label>
+            <label className="col-span-2 min-w-0 text-xs text-slate-500">Дата<PickerField type="date" value={f.date} onChange={set('date')} /></label>
+            <label className="min-w-0 text-xs text-slate-500">Начало<PickerField type="time" value={f.start_time} onChange={set('start_time')} /></label>
+            <label className="min-w-0 text-xs text-slate-500">Конец<PickerField type="time" value={f.end_time} onChange={set('end_time')} /></label>
             <label className="min-w-0 text-xs text-slate-500">Широта<input className="field mt-1" required type="number" step="any" value={f.lat} onChange={set('lat')} /></label>
             <label className="min-w-0 text-xs text-slate-500">Долгота<input className="field mt-1" required type="number" step="any" value={f.lng} onChange={set('lng')} /></label>
             <button className="btn col-span-2">{editId ? 'Сохранить' : 'Добавить'}</button>

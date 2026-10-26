@@ -3,7 +3,7 @@ import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { FileDown, FileSpreadsheet, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { AttendanceFull, EventRow, Profile } from '../../lib/types'
-import { Card, fmtDate, fmtTime, Msg } from '../../components/ui'
+import { Card, fmtDate, fmtTime, Msg, PickerField } from '../../components/ui'
 
 const slot = (e: EventRow) => `${fmtTime(e.start_time).replace(':', '.')}-${fmtTime(e.end_time).replace(':', '.')}` // «19.00-20.00»
 const ymd =(d: Date) => format(d, 'yyyy-MM-dd')
@@ -80,8 +80,8 @@ export default function Log() {
       <h1 className="text-2xl font-bold">Журнал посещений</h1>
       <Card className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <label className="min-w-0 text-xs text-slate-500">С<input className="field mt-1" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-          <label className="min-w-0 text-xs text-slate-500">По<input className="field mt-1" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
+          <label className="min-w-0 text-xs text-slate-500">С<PickerField type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
+          <label className="min-w-0 text-xs text-slate-500">По<PickerField type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <button className="btn-ghost" onClick={exportXlsx}><FileSpreadsheet size={18} /> Excel</button>

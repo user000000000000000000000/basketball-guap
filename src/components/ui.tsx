@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
+import { CalendarDays, Clock } from 'lucide-react'
 
 export const Card = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
   <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className={`glass p-5 ${className}`}>
@@ -31,3 +32,13 @@ export const fmtDate = (d: string) => {
   const text = new Date(d + 'T00:00').toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' })
   return days === 0 ? `Сегодня, ${text}` : days === 1 ? `Завтра, ${text}` : text
 }
+
+/** Дата/время: видимое значение рисуем сами (по центру), нативный инпут лежит поверх прозрачным и открывает системный пикер.
+ *  Нативный date/time в iOS Safari не поддаётся выравниванию — отсюда обходной путь. */
+export const PickerField = ({ type, value, onChange }: { type: 'date' | 'time'; value: string; onChange: (e: { target: { value: string } }) => void }) => (
+  <div className="field relative mt-1 !flex items-center justify-between">
+    <span>{value ? (type === 'date' ? value.split('-').reverse().join('.') : value) : '—'}</span>
+    {type === 'date' ? <CalendarDays size={18} className="text-slate-500" /> : <Clock size={18} className="text-slate-500" />}
+    <input type={type} required value={value} onChange={onChange} className="absolute inset-0 size-full cursor-pointer opacity-0" />
+  </div>
+)
