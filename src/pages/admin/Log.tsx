@@ -3,7 +3,7 @@ import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { FileDown, FileSpreadsheet, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { AttendanceFull, EventRow, Profile } from '../../lib/types'
-import { Card, fmtTime, Msg } from '../../components/ui'
+import { Card, fmtDate, fmtTime, Msg } from '../../components/ui'
 
 const slot = (e: EventRow) => `${fmtTime(e.start_time).replace(':', '.')}-${fmtTime(e.end_time).replace(':', '.')}` // «19.00-20.00»
 const ymd =(d: Date) => format(d, 'yyyy-MM-dd')
@@ -72,34 +72,68 @@ export default function Log() {
     html2pdf().set({ margin: 10, filename: `attendance_${from}_${to}.pdf`, jsPDF: { unit: 'mm', format: 'a4' } }).from(report.current!).save()
   }
 
+  const byEvent = [...summary].reverse() // свежие сверху
+  const rowsOf = (id: string) => rows.filter((r) => r.event_id === id)
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Журнал посещений</h1>
-      <Card className="grid grid-cols-2 gap-3">
-        <input className="field" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-        <input className="field" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-        <button className="btn-ghost" onClick={exportXlsx}><FileSpreadsheet size={18} /> Excel</button>
-        <button className="btn-ghost" onClick={exportPdf}><FileDown size={18} /> PDF</button>
+      <Card className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <label className="min-w-0 text-xs text-slate-500">С<input className="field mt-1" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
+          <label className="min-w-0 text-xs text-slate-500">По<input className="field mt-1" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <button className="btn-ghost" onClick={exportXlsx}><FileSpreadsheet size={18} /> Excel</button>
+          <button className="btn-ghost" onClick={exportPdf}><FileDown size={18} /> PDF</button>
+        </div>
+        <p className="text-center text-sm text-slate-600">Тренировок: <b>{events.length}</b> · отметок: <b>{total}</b></p>
       </Card>
+
+      {byEvent.length === 0 && <Card className="text-center text-slate-500">За этот период тренировок нет</Card>}
+      {byEvent.map(({ e, n }) => (
+        <Card key={e.id} className="space-y-2 !p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="font-bold">{e.title}</p>
+              <p className="text-sm text-slate-600">{fmtDate(e.date)} · {fmtTime(e.start_time)}–{fmtTime(e.end_time)}</p>
+            </div>
+            <span className="grid size-12 shrink-0 place-items-center rounded-full bg-white/80 text-xl font-extrabold text-brand shadow">{n}</span>
+          </div>
+          {rowsOf(e.id).map((r) => (
+            <div key={r.id} className="flex items-center justify-between gap-2 rounded-2xl bg-white/60 py-1 pl-3 pr-1">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{r.profiles.full_name}</p>
+                <p className="text-xs text-slate-500">{r.profiles.group} · {format(new Date(r.created_at), 'HH:mm')}</p>
+              </div>
+              <button aria-label="Удалить отметку" className="grid size-11 shrink-0 place-items-center text-rose-600" onClick={() => del(r.id)}><Trash2 size={18} /></button>
+            </div>
+          ))}
+          {n === 0 && <p className="text-sm text-slate-400">Никто не отметился</p>}
+        </Card>
+      ))}
 
       <Card>
-        <form onSubmit={addManual} className="space-y-3">
-          <p className="font-bold">Отметить вручную</p>
-          <select className="field" required value={add.event_id} onChange={(e) => setAdd({ ...add, event_id: e.target.value })}>
-            <option value="">Мероприятие…</option>
-            {events.map((e) => <option key={e.id} value={e.id}>{e.date} {fmtTime(e.start_time)} {e.title}</option>)}
-          </select>
-          <select className="field" required value={add.user_id} onChange={(e) => setAdd({ ...add, user_id: e.target.value })}>
-            <option value="">Студент…</option>
-            {students.map((s) => <option key={s.id} value={s.id}>{s.full_name} ({s.group})</option>)}
-          </select>
-          {err && <Msg kind="err">{err}</Msg>}
-          <button className="btn w-full">Отметить</button>
-        </form>
+        <details>
+          <summary className="cursor-pointer py-2 font-bold">Отметить студента вручную</summary>
+          <form onSubmit={addManual} className="mt-3 space-y-3">
+            <select className="field" required value={add.event_id} onChange={(e) => setAdd({ ...add, event_id: e.target.value })}>
+              <option value="">Тренировка…</option>
+              {events.map((e) => <option key={e.id} value={e.id}>{fmtDate(e.date)} {fmtTime(e.start_time)}</option>)}
+            </select>
+            <select className="field" required value={add.user_id} onChange={(e) => setAdd({ ...add, user_id: e.target.value })}>
+              <option value="">Студент…</option>
+              {students.map((s) => <option key={s.id} value={s.id}>{s.full_name} ({s.group})</option>)}
+            </select>
+            {err && <Msg kind="err">{err}</Msg>}
+            <button className="btn w-full">Отметить</button>
+          </form>
+        </details>
       </Card>
 
-      <Card className="overflow-x-auto !p-3">
-        <div ref={report} className="min-w-[520px] bg-white p-3 text-sm text-[#0f172a]"> {/* hex, не oklch: html2canvas не парсит oklch из палитры Tailwind v4 */}
+      {/* отчёт для PDF: за экраном, но в DOM (html2canvas), hex-цвета — он не понимает oklch из Tailwind v4 */}
+      <div style={{ position: 'absolute', left: -9999, top: 0 }} aria-hidden>
+        <div ref={report} className="w-[720px] bg-white p-4 text-sm text-[#0f172a]">
           <h2 className="mb-1 text-base font-bold">Баскетбол ГУАП — посещаемость {from} … {to}</h2>
           <p className="mb-3">Всего отметок: <b>{total}</b></p>
           <table className="mb-4 w-full text-left">
@@ -107,19 +141,18 @@ export default function Log() {
             <tbody>{summary.map(({ e, n }) => <tr key={e.id} className="border-b"><td className="py-1">{e.date}</td><td>{slot(e)}</td><td>{e.title}</td><td>{n}</td></tr>)}</tbody>
           </table>
           <table className="w-full text-left">
-            <thead><tr className="border-b font-semibold"><th className="py-1">ФИО</th><th>Группа</th><th>Мероприятие</th><th>Отметка</th><th data-html2canvas-ignore /></tr></thead>
+            <thead><tr className="border-b font-semibold"><th className="py-1">ФИО</th><th>Группа</th><th>Мероприятие</th><th>Отметка</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-b">
                   <td className="py-1">{r.profiles.full_name}</td><td>{r.profiles.group}</td>
                   <td>{r.events.title} {r.events.date}</td><td>{format(new Date(r.created_at), 'dd.MM HH:mm')}</td>
-                  <td data-html2canvas-ignore><button aria-label="Удалить" className="p-2 text-[#e11d48]" onClick={() => del(r.id)}><Trash2 size={16} /></button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
     </div>
   )
 }

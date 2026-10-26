@@ -26,4 +26,8 @@ export const Msg = ({ kind, children }: { kind: 'ok' | 'err'; children: ReactNod
 export const Spinner = () => <div className="mx-auto my-10 size-8 animate-spin rounded-full border-4 border-brand/20 border-t-brand" />
 
 export const fmtTime = (t: string) => t.slice(0, 5)
-export const fmtDate = (d: string) => new Date(d + 'T00:00').toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' })
+export const fmtDate = (d: string) => {
+  const days = Math.round((new Date(d + 'T00:00').getTime() - new Date().setHours(0, 0, 0, 0)) / 864e5)
+  const text = new Date(d + 'T00:00').toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' })
+  return days === 0 ? `Сегодня, ${text}` : days === 1 ? `Завтра, ${text}` : text
+}

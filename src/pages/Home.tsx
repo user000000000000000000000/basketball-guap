@@ -54,7 +54,7 @@ export default function Home() {
       {msg && <Msg kind={msg.kind}>{msg.text}</Msg>}
       {events.length === 0 && <Card className="text-center text-slate-500">Пока ничего не запланировано</Card>}
       {events.map((e) => (
-        <Card key={e.id} className="space-y-3">
+        <Card key={e.id} className={`space-y-3 ${isOpen(e) && !done.has(e.id) ? 'ring-2 ring-brand/60' : ''}`}>
           <div>
             <p className="text-lg font-bold">{e.title}</p>
             <p className="text-slate-600">{fmtDate(e.date)}, {fmtTime(e.start_time)}–{fmtTime(e.end_time)}</p>
@@ -66,7 +66,7 @@ export default function Home() {
               <MapPin size={20} /> {busyId === e.id ? 'Определяем местоположение…' : 'Отметиться'}
             </button>
           ) : (
-            <p className="text-sm text-slate-500">Отметка откроется за 30 минут до начала</p>
+            <p className="text-sm text-slate-500">Отметка откроется за 30 минут до начала, потом кнопка станет активной</p>
           )}
         </Card>
       ))}

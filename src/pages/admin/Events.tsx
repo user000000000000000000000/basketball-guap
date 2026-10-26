@@ -6,18 +6,22 @@ import { GYM, WEEKLY } from '../../lib/config'
 import type { EventRow } from '../../lib/types'
 import { Card, fmtDate, fmtTime, Msg } from '../../components/ui'
 
-const empty = () => ({ title: 'Тренировка', date: format(new Date(), 'yyyy-MM-dd'), start_time: '18:00', end_time: '19:30', lat: String(GYM.lat), lng: String(GYM.lng) })
+const empty = () => ({ title: 'Баскетбол', date: format(new Date(), 'yyyy-MM-dd'), start_time: '20:00', end_time: '21:00', lat: String(GYM.lat), lng: String(GYM.lng) })
 
 export default function Events() {
   const [list, setList] = useState<EventRow[]>([])
   const [f, setF] = useState(empty())
   const [editId, setEditId] = useState<string | null>(null)
   const [err, setErr] = useState('')
+  const [past, setPast] = useState(false)
+  const [open, setOpen] = useState(false)
 
   const load = useCallback(async () => {
-    const { data } = await supabase.from('events').select('*').order('date', { ascending: false }).order('start_time')
+    let q = supabase.from('events').select('*').order('date').order('start_time')
+    if (!past) q = q.gte('date', format(new Date(), 'yyyy-MM-dd'))
+    const { data } = await q
     setList((data ?? []) as EventRow[])
-  }, [])
+  }, [past])
   useEffect(() => { load() }, [load])
 
   const submit = async (e: FormEvent) => {
@@ -26,7 +30,7 @@ export default function Events() {
     const q = editId ? supabase.from('events').update(row).eq('id', editId) : supabase.from('events').insert(row)
     const { error } = await q
     if (error) return setErr(error.message)
-    setErr(''); setEditId(null); setF(empty()); load()
+    setErr(''); setEditId(null); setOpen(false); setF(empty()); load()
   }
 
   // создаёт тренировки по недельному расписанию на 4 недели вперёд, уже существующие пропускает
@@ -43,6 +47,7 @@ export default function Events() {
 
   const edit = (e: EventRow) => {
     setEditId(e.id)
+    setOpen(true)
     setF({ title: e.title, date: e.date, start_time: fmtTime(e.start_time), end_time: fmtTime(e.end_time), lat: String(e.lat ?? GYM.lat), lng: String(e.lng ?? GYM.lng) })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -57,20 +62,27 @@ export default function Events() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Расписание</h1>
-      <button className="btn-ghost w-full" onClick={fillWeeks}>Создать тренировки по расписанию (пн, ср · два часовых блока 20–22) на 4 недели</button>
-      <Card>
-        <form onSubmit={submit} className="grid grid-cols-2 gap-3">
-          <input className="field col-span-2" required placeholder="Название" value={f.title} onChange={set('title')} />
-          <input className="field col-span-2" required type="date" value={f.date} onChange={set('date')} />
-          <label className="text-xs text-slate-500">Начало<input className="field mt-1" required type="time" value={f.start_time} onChange={set('start_time')} /></label>
-          <label className="text-xs text-slate-500">Конец<input className="field mt-1" required type="time" value={f.end_time} onChange={set('end_time')} /></label>
-          <label className="text-xs text-slate-500">Широта<input className="field mt-1" required type="number" step="any" value={f.lat} onChange={set('lat')} /></label>
-          <label className="text-xs text-slate-500">Долгота<input className="field mt-1" required type="number" step="any" value={f.lng} onChange={set('lng')} /></label>
-          {err && <div className="col-span-2"><Msg kind="err">{err}</Msg></div>}
-          <button className="btn col-span-2">{editId ? 'Сохранить' : 'Добавить'}</button>
-          {editId && <button type="button" className="btn-ghost col-span-2" onClick={() => { setEditId(null); setF(empty()) }}>Отмена</button>}
-        </form>
+      <Card className="space-y-3">
+        <button className="btn w-full !h-auto !py-3 text-center leading-snug" onClick={fillWeeks}>
+          Создать тренировки на 4 недели
+          <span className="block text-xs font-normal opacity-90">пн и ср · 20:00–21:00 и 21:00–22:00</span>
+        </button>
+        {err && <Msg kind="err">{err}</Msg>}
+        <button className="btn-ghost w-full" onClick={() => setOpen(!open)}>{open ? 'Скрыть форму' : editId ? 'Редактирование' : 'Добавить одну тренировку'}</button>
+        {open && (
+          <form onSubmit={submit} className="grid grid-cols-2 gap-3">
+            <input className="field col-span-2" required placeholder="Название" value={f.title} onChange={set('title')} />
+            <label className="col-span-2 min-w-0 text-xs text-slate-500">Дата<input className="field mt-1" required type="date" value={f.date} onChange={set('date')} /></label>
+            <label className="min-w-0 text-xs text-slate-500">Начало<input className="field mt-1" required type="time" value={f.start_time} onChange={set('start_time')} /></label>
+            <label className="min-w-0 text-xs text-slate-500">Конец<input className="field mt-1" required type="time" value={f.end_time} onChange={set('end_time')} /></label>
+            <label className="min-w-0 text-xs text-slate-500">Широта<input className="field mt-1" required type="number" step="any" value={f.lat} onChange={set('lat')} /></label>
+            <label className="min-w-0 text-xs text-slate-500">Долгота<input className="field mt-1" required type="number" step="any" value={f.lng} onChange={set('lng')} /></label>
+            <button className="btn col-span-2">{editId ? 'Сохранить' : 'Добавить'}</button>
+            {editId && <button type="button" className="btn-ghost col-span-2" onClick={() => { setEditId(null); setOpen(false); setF(empty()) }}>Отмена</button>}
+          </form>
+        )}
       </Card>
+      {list.length === 0 && <Card className="text-center text-slate-500">Тренировок нет — нажмите «Создать тренировки на 4 недели»</Card>}
       {list.map((e) => (
         <Card key={e.id} className="flex items-center justify-between gap-3 !p-4">
           <div>
@@ -83,6 +95,7 @@ export default function Events() {
           </div>
         </Card>
       ))}
+      <button className="btn-ghost w-full" onClick={() => setPast(!past)}>{past ? 'Скрыть прошедшие' : 'Показать прошедшие'}</button>
     </div>
   )
 }

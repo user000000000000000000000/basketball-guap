@@ -66,7 +66,14 @@ body {
   border: 1px solid rgba(255, 255, 255, .8);
 }
 @utility field {
+  display: block;
   width: 100%;
+  min-width: 0; /* iOS: date/time инпуты иначе вылезают за карточку */
+  max-width: 100%;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
   min-height: 52px;
   padding: 0 1.1rem;
   border-radius: 18px;
