@@ -7,6 +7,8 @@ export const GYM = {
   lng: Number(env.VITE_GYM_LNG || 30.3142),
   radiusM: Number(env.VITE_GYM_RADIUS_M || 100),
 }
+// Ключ Яндекс Геокодера (бесплатно, developer.tech.yandex.ru). Без него адрес ищется через OpenStreetMap — он хуже находит дома.
+export const YANDEX_KEY = (env.VITE_YANDEX_GEOCODER_KEY as string | undefined) || ''
 export const CHECKIN_BEFORE_MIN = 30 // отметка открывается за 30 минут до начала
 // Тренировки секции: день недели (1 = пн … 6 = сб, 0 = вс). Остальное в зале (футбол, бадминтон, волейбол) — не наша секция.
 export const WEEKLY = [

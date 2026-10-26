@@ -21,6 +21,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_YANDEX_GEOCODER_KEY: ${{ secrets.VITE_YANDEX_GEOCODER_KEY }}
           VITE_GYM_LAT: ${{ vars.VITE_GYM_LAT }}
           VITE_GYM_LNG: ${{ vars.VITE_GYM_LNG }}
       - uses: actions/upload-pages-artifact@v3
