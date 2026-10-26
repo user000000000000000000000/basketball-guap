@@ -79,7 +79,7 @@ export default function Events() {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Расписание</h1>
       <Card className="space-y-3">
-        <button className="btn w-full !h-auto !py-3 text-center leading-snug" onClick={fillWeeks}>
+        <button className="btn w-full flex-col !h-auto !gap-0 !py-3 text-center leading-snug" onClick={fillWeeks}>
           Создать тренировки на 4 недели
           <span className="block text-xs font-normal opacity-90">пн и ср · 20:00–21:00 и 21:00–22:00</span>
         </button>
