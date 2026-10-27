@@ -1,24 +1,30 @@
 import { useEffect, useState } from 'react'
 import { eachDayOfInterval, format, subDays } from 'date-fns'
 import { supabase } from '../../lib/supabase'
+import { useSections } from '../../hooks/useSections'
 import { Card, Spinner } from '../../components/ui'
 
 export default function Dashboard() {
+  const { current } = useSections()
   const [days, setDays] = useState<{ day: string; n: number }[] | null>(null)
 
   useEffect(() => {
+    if (!current) return
+    setDays(null)
     const from = subDays(new Date(), 29)
     supabase
       .from('attendance')
-      .select('created_at')
+      .select('created_at, events!inner(section_id)')
+      .eq('events.section_id', current.id)
       .gte('created_at', from.toISOString())
       .then(({ data }) => {
         const count: Record<string, number> = {}
         data?.forEach((a) => { const k = format(new Date(a.created_at), 'yyyy-MM-dd'); count[k] = (count[k] ?? 0) + 1 })
         setDays(eachDayOfInterval({ start: from, end: new Date() }).map((d) => ({ day: format(d, 'yyyy-MM-dd'), n: count[format(d, 'yyyy-MM-dd')] ?? 0 })))
       })
-  }, [])
+  }, [current])
 
+  if (!current) return <Card className="text-center text-slate-500">Вам пока не назначена ни одна секция</Card>
   if (!days) return <Spinner />
   const max = Math.max(1, ...days.map((d) => d.n))
   const total = days.reduce((s, d) => s + d.n, 0)
@@ -32,7 +38,7 @@ export default function Dashboard() {
       <Card>
         <div className="flex h-48 items-end gap-[3px]">
           {days.map((d) => (
-            <div key={d.day} title={`${format(new Date(d.day), 'dd.MM')}: ${d.n}`} className="flex-1 rounded-t-md bg-gradient-to-t from-[#35a7e5] via-brand to-[#d81b60]" style={{ height: `${Math.max(2, (d.n / max) * 100)}%`, opacity: d.n ? 1 : 0.2 }} />
+            <div key={d.day} title={`${format(new Date(d.day), 'dd.MM')}: ${d.n}`} className="flex-1 rounded-t-md" style={{ height: `${Math.max(2, (d.n / max) * 100)}%`, opacity: d.n ? 1 : 0.2, background: `linear-gradient(to top, ${current.color}, #d81b60)` }} />
           ))}
         </div>
         <div className="mt-2 flex justify-between text-xs text-slate-500">

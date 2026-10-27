@@ -3,13 +3,16 @@ import { createRoot } from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import App from './App'
 import { AuthProvider } from './hooks/useAuth'
+import { SectionsProvider } from './hooks/useSections'
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HashRouter>
       <AuthProvider>
-        <App />
+        <SectionsProvider>
+          <App />
+        </SectionsProvider>
       </AuthProvider>
     </HashRouter>
   </StrictMode>,

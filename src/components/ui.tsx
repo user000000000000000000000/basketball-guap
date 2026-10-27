@@ -16,9 +16,29 @@ export const Logo = ({ size = 'text-2xl' }: { size?: string }) => (
       <path d="M329 327C400 306 480 297 520 306C548 316 545 350 520 390C490 440 400 560 298 628C380 545 440 470 462 385C470 350 458 328 329 327Z" />
       <path d="M487 467C515 465 535 470 528 487C510 520 430 580 367 613C430 565 475 520 487 467Z" />
     </svg>
-    <span className="text-[#1c3f94]">Баскетбол ГУАП</span>
+    <span className="text-[#1c3f94]">ССК ГУАП</span>
   </div>
 )
+
+const EMOJI: Record<string, string> = {
+  'Баскетбол': '🏀', 'Футбол': '⚽', 'Волейбол': '🏐', 'Бадминтон': '🏸', 'Плавание': '🏊', 'Шахматы': '♟️', 'Бильярд': '🎱',
+  'Боулинг': '🎳', 'Дартс': '🎯', 'Гребной спорт': '🚣', 'Парусный спорт': '⛵', 'Автоспорт': '🏎️', 'Спортивный туризм': '🥾', 'Го': '⚫', 'Шашки': '⚪',
+}
+
+/** Цветной значок секции: эмодзи вида спорта, иначе инициалы (логотипов у секций нет) */
+export const SectionBadge = ({ name, color, size = 44 }: { name: string; color: string; size?: number }) => (
+  <span
+    className="grid shrink-0 place-items-center rounded-2xl font-extrabold text-white shadow"
+    style={{ width: size, height: size, background: `linear-gradient(135deg, ${color}, ${color}cc)`, fontSize: size * (EMOJI[name] ? 0.5 : 0.38) }}
+  >
+    {EMOJI[name] ?? name.split(/[\s-]+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+  </span>
+)
+
+export const WEEKDAYS = [
+  { dow: 1, short: 'пн', full: 'Понедельник' }, { dow: 2, short: 'вт', full: 'Вторник' }, { dow: 3, short: 'ср', full: 'Среда' },
+  { dow: 4, short: 'чт', full: 'Четверг' }, { dow: 5, short: 'пт', full: 'Пятница' }, { dow: 6, short: 'сб', full: 'Суббота' }, { dow: 0, short: 'вс', full: 'Воскресенье' },
+]
 
 export const Msg = ({ kind, children }: { kind: 'ok' | 'err'; children: ReactNode }) => (
   <p className={`rounded-2xl px-4 py-3 text-sm font-medium ${kind === 'ok' ? 'bg-emerald-100/80 text-emerald-800' : 'bg-rose-100/80 text-rose-800'}`}>{children}</p>
